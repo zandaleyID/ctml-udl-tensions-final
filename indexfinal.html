@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTML and UDL Tensions</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600&display=swap">
+<style>
+/* Layout: one centred column. Three tension rows (CTML label | slider track | UDL label)
+   under a single switch, with the bridge as a closing bar. */
+:root {
+  --bg: #eaf1ff;
+  --surface: #f6f9ff;
+  --fg: #0b214f;
+  --muted: #3d4d78;
+  --ctml: #0b214f;
+  --udl: #5b479d;
+  --track: #b9c5e2;
+  --line: #c7d2ec;
+  --bridge-bg: #5b479d;
+  --bridge-fg: #ffffff;
+  --focus: #0b214f;
+  --display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1530; --surface: #162043; --fg: #e8ecff; --muted: #b3bddf;
+    --ctml: #a9bdff; --udl: #c1b3ff; --track: #34406b; --line: #2b3763;
+    --bridge-bg: #4a3a8a; --bridge-fg: #ffffff; --focus: #e8ecff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1530; --surface: #162043; --fg: #e8ecff; --muted: #b3bddf;
+  --ctml: #a9bdff; --udl: #c1b3ff; --track: #34406b; --line: #2b3763;
+  --bridge-bg: #4a3a8a; --bridge-fg: #ffffff; --focus: #e8ecff;
+  color-scheme: dark;
+}
+
+html { color-scheme: light; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: 16px;
+  line-height: 1.5;
+  padding-block: 32px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 860px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 5vw, 2.7rem);
+  line-height: 1.1;
+  margin: 0;
+  text-wrap: balance;
+}
+.lede { margin: 8px 0 0; color: var(--muted); max-width: 60ch; }
+
+.control {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.switch-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.switch {
+  appearance: none; border: 0; padding: 0; cursor: pointer;
+  width: 60px; height: 34px; border-radius: 34px;
+  background: var(--track);
+  position: relative; flex: none;
+  transition: background .2s;
+}
+.switch::after {
+  content: ""; position: absolute; top: 4px; left: 4px;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0,0,0,.3);
+  transition: transform .2s;
+}
+.switch[aria-checked="true"] { background: var(--udl); }
+.switch[aria-checked="true"]::after { transform: translateX(26px); }
+.switch:focus-visible, .switch-label:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.switch-label { font-weight: 600; font-size: 1.05rem; cursor: pointer; }
+.state { margin: 0; color: var(--muted); font-size: .95rem; }
+.state strong { color: var(--fg); }
+
+.rowctl { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.rowctl .switch-label { font-size: .98rem; }
+.rows { display: flex; flex-direction: column; gap: 26px; }
+.row { display: flex; flex-direction: column; gap: 10px; }
+.row { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px; }
+.row h2 {
+  font-family: var(--display);
+  font-size: 1.2rem; margin: 0; font-weight: 600;
+}
+.scale {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(150px, 1.3fr) minmax(0, 1fr);
+  align-items: center;
+  column-gap: 18px;
+}
+.end { font-size: .95rem; line-height: 1.35; min-width: 0; }
+.end.l { color: var(--ctml); text-align: right; font-weight: 500; }
+.end.r { color: var(--udl); font-weight: 500; }
+.track-wrap { position: relative; height: 34px; }
+.track {
+  position: absolute; left: 0; right: 0; top: 50%; height: 10px;
+  transform: translateY(-50%);
+  background: var(--track); border-radius: 10px;
+}
+.cap { position: absolute; top: 50%; width: 18px; height: 18px; border-radius: 50%; transform: translate(-50%, -50%); }
+.cap.l { left: 0; background: var(--ctml); }
+.cap.r { left: 100%; background: var(--udl); }
+.marker {
+  position: absolute; top: 50%; width: 30px; height: 30px; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--surface); border: 4px solid var(--fg);
+  left: var(--pos, 6%);
+  transition: left .45s cubic-bezier(.3,.7,.2,1);
+}
+.note {
+  margin: 0; padding: 10px 14px; border-radius: 10px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-size: .97rem; max-width: 70ch;
+}
+
+.bridge {
+  background: var(--bridge-bg); color: var(--bridge-fg);
+  border-radius: 14px; padding: 18px 20px;
+}
+.bridge h2 { font-family: var(--display); font-size: 1.15rem; margin: 0 0 4px; }
+.bridge p { margin: 0; }
+
+@media (max-width: 600px) {
+  .scale { grid-template-columns: 1fr 1fr; row-gap: 8px; }
+  .track-wrap { grid-column: 1 / -1; grid-row: 2; }
+  .end.l { text-align: left; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marker, .switch, .switch::after { transition: none; }
+}
+</style>
+
+</head>
+<body>
+<main>
+  <header>
+    <h1>Where CTML and UDL pull apart</h1>
+    <p class="lede">Three places where cognitive load theory and Universal Design for Learning disagree, and one way through. Each tension has its own switch. Turn it on to see what changes.</p>
+  </header>
+
+  <section class="rows" id="rows" aria-label="The three tensions"></section>
+
+  <section class="bridge">
+    <h2>The bridge</h2>
+    <p>Let learners decide how they access content: turn captions on or off, adjust the presentation, or opt into pre-training. Access improves without loading every learner with everything.</p>
+  </section>
+</main>
+
+<script>
+(function () {
+  var rows = [
+    { t: "Redundancy vs. multiple representation", c: "Let learners switch captions and transcripts on or off",
+      l: "CTML: cut unnecessary load", r: "UDL: more than one format for access",
+      off: "Captions and transcripts are cut as redundant. Less load, but some learners lose access.",
+      on: "Learners switch captions and transcripts on or off for themselves." },
+    { t: "Coherence vs. engagement", c: "Let learners opt into richer, meaningful content",
+      l: "CTML: cut distracting extras", r: "UDL: meaningful content supports engagement",
+      off: "Extras are cut to stay focused. Learners get less connection to their own contexts.",
+      on: "Learners opt into richer, meaningful content when they want it." },
+    { t: "Efficiency vs. choice", c: "Let learners adjust the presentation or opt into pre-training",
+      l: "CTML: guide along a fixed path", r: "UDL: flexibility and choice",
+      off: "One fixed path. Efficient, but no flexibility.",
+      on: "Learners adjust the presentation or opt into pre-training, so choice does not mean everything is on for everyone." }
+  ];
+
+  var host = document.getElementById("rows");
+
+  rows.forEach(function (r, i) {
+    var row = document.createElement("div");
+    row.className = "row";
+    row.innerHTML =
+      '<h2>' + r.t + '</h2>' +
+      '<div class="scale">' +
+        '<div class="end l">' + r.l + '</div>' +
+        '<div class="track-wrap" aria-hidden="true"><div class="track"></div>' +
+          '<span class="cap l"></span><span class="cap r"></span><span class="marker"></span></div>' +
+        '<div class="end r">' + r.r + '</div>' +
+      '</div>' +
+      '<div class="rowctl">' +
+        '<button type="button" class="switch" role="switch" aria-checked="false" aria-labelledby="sl' + i + '"></button>' +
+        '<span class="switch-label" id="sl' + i + '">' + r.c + '</span>' +
+      '</div>' +
+      '<p class="note" aria-live="polite"></p>';
+    host.appendChild(row);
+    var sw = row.querySelector(".switch"), lab = row.querySelector(".switch-label"),
+        mk = row.querySelector(".marker"), note = row.querySelector(".note");
+    function render(on) {
+      sw.setAttribute("aria-checked", on ? "true" : "false");
+      mk.style.setProperty("--pos", on ? "50%" : "6%");
+      note.textContent = on ? r.on : r.off;
+    }
+    function toggle() { render(sw.getAttribute("aria-checked") !== "true"); }
+    sw.addEventListener("click", toggle);
+    lab.addEventListener("click", toggle);
+    render(false);
+  });
+})();
+</script>
+</body>
+</html>
